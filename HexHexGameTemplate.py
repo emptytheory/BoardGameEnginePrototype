@@ -66,6 +66,24 @@ class HexHexGameTemplate:
 		# Return True if the count of unique group IDs is even, False otherwise
 		return len(unique_group_ids) % 2 == 0
 
+	def __str__(self):
+		result = ""
+
+		for i, (state, _) in enumerate(self.board[::-1]):
+			# print row offset
+			if self._column_index(i) == 0:
+				result += "   " * self._row_index(i)
+			# print cell state
+			if state == self.NONE:
+				result += "      "
+			else:
+				result += f"{state:02d}    "
+			# line break after last column
+			if self._column_index(i) == self.LINE_LENGTH - 1:
+				result += "\n\n"
+
+		return result
+
 
 """
 Example of the array of a hexhex 4 board:
