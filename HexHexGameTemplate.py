@@ -14,6 +14,28 @@ class HexHexGameTemplate:
 			(self.NONE, self.NONE) if self._is_off_board(index) else (self.EMPTY, self.NONE) 
 			for index in range(self.LINE_LENGTH * self.LINE_LENGTH)
 		]
+		# Adjacency list for valid indices only. Should never be deep copied.
+		self.adjacency_list = self._create_adjacency_list()
+
+	def _create_adjacency_list(self):
+		result = {}
+		# Map valid indices to empty lists initially
+		for i, (state, _) in enumerate(self.board):
+			if state != self.NONE:
+				result[i] = []
+
+		# Populate the lists with valid neighbors		
+		valid_indices = result.keys()
+		for i in valid_indices:
+			for dx, dy in self.DIRECTIONS:
+				new_column_i = self._column_index(i) + dx
+				new_row_i = self._row_index(i) + dy
+				new_i = self._index_from_column_and_row_indices(new_column_i, new_row_i)
+
+				if new_i in valid_indices:
+					result[i].append(new_i)
+		
+		return result
 
 	def _column_index(self, index):
 		return index % self.LINE_LENGTH
@@ -42,7 +64,7 @@ class HexHexGameTemplate:
 		return self._index_from_column_and_row_indices(x + self.CENTER_LINE_INDEX, y + self.CENTER_LINE_INDEX)
 
 	def _valid_line_index(self, index):
-		return 0 < index < self.LINE_LENGTH
+		return 0 <= index < self.LINE_LENGTH
 
 	def even_neighbors(self, row_index, column_index, owner):
 		unique_group_ids = set()
