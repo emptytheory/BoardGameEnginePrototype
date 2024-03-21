@@ -5,6 +5,10 @@ class HexHexGameTemplate:
 	WHITE = 2
 	DIRECTIONS = [(0,1), (1,0), (-1,0), (0,-1), (1,-1), (-1,1)]
 
+	# As it stands, all of this happens every time an instance of this class is made.
+	# It is not possible to overload methods in Python.
+	# One solution is to make it conditional on the arguments passed.
+	# Another is to make a separate initialization method that must be called manually
 	def __init__(self, side_length):
 		self.SIDE_LENGTH = side_length
 		self.LINE_LENGTH = 2 * side_length - 1
@@ -66,22 +70,14 @@ class HexHexGameTemplate:
 	def _valid_line_index(self, index):
 		return 0 <= index < self.LINE_LENGTH
 
-	def even_neighbors(self, row_index, column_index, owner):
+	def even_neighbors(self, index, owner):
 		unique_group_ids = set()
 
 		# Iterate through each direction from the current position
-		for dx, dy in self.DIRECTIONS:
-			new_row_index = row_index + dx
-			new_column_index = column_index + dy
-
-			# Check if the new position is valid
-			# OBS: Precompute these to skip this check!
-			if self._valid_line_index(new_row_index) and self._valid_line_index(new_column_index):
-				# Calculate the index for the new position
-				index = self._index_from_column_and_row_indices(new_row_index, new_column_index)
+		for neighbor in self.adjacency_list[index]:
 
 				# Check if the cell belongs to the specified owner
-				cell_state, group_id = board[index]
+				cell_state, group_id = board[neighbor]
 				if cell_state == owner:
 					unique_group_ids.add(group_id)
 
