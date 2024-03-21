@@ -77,7 +77,7 @@ class HexHexGameTemplate:
 		for neighbor in self.adjacency_list[index]:
 
 				# Check if the cell belongs to the specified owner
-				cell_state, group_id = board[neighbor]
+				cell_state, group_id = self.board[neighbor]
 				if cell_state == owner:
 					unique_group_ids.add(group_id)
 
