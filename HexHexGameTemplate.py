@@ -21,6 +21,10 @@ class HexHexGameTemplate:
 		# Adjacency list for valid indices only. Should never be deep copied.
 		self.adjacency_list = self._create_adjacency_list()
 
+	def count_moves(self, mover):
+		return len([i for i in self.adjacency_list.keys() if self.board[i][0] == self.EMPTY and 
+   															 self._even_neighbors(i, mover)])
+
 	def _create_adjacency_list(self):
 		result = {}
 		# Map valid indices to empty lists initially
@@ -70,7 +74,7 @@ class HexHexGameTemplate:
 	def _valid_line_index(self, index):
 		return 0 <= index < self.LINE_LENGTH
 
-	def even_neighbors(self, index, owner):
+	def _even_neighbors(self, index, owner):
 		unique_group_ids = set()
 
 		# Iterate through each direction from the current position
