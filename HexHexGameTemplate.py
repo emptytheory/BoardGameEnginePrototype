@@ -1,3 +1,61 @@
+class HexHexTopology:
+	def __init__(self, side_length):
+		self.SIDE_LENGTH = side_length
+		self.LINE_LENGTH = 2 * side_length - 1
+		self.CENTER_LINE_INDEX = side_length - 1
+
+		# Adjacency list for valid indices only
+		self.adjacency_list = self._create_adjacency_list()
+
+	def _create_adjacency_list(self):
+		result = {}
+		# Map valid indices to empty lists initially
+		for i in range(self.LINE_LENGTH * self.LINE_LENGTH):
+			if not self.is_off_board(i):
+				result[i] = []
+
+		# Populate the lists with valid neighbors		
+		valid_indices = result.keys()
+		for i in valid_indices:
+			for dx, dy in self.DIRECTIONS:
+				new_column_i = self.column_index(i) + dx
+				new_row_i = self.row_index(i) + dy
+				new_i = self.index_from_column_and_row_indices(new_column_i, new_row_i)
+
+				if new_i in valid_indices:
+					result[i].append(new_i)
+		
+		return result
+
+	def column_index(self, index):
+		return index % self.LINE_LENGTH
+
+	def row_index(self, index):
+		return index // self.LINE_LENGTH
+
+	def is_off_board(self, index):
+		return (abs(self.x(index)) >= self.SIDE_LENGTH or
+				abs(self.y(index)) >= self.SIDE_LENGTH or
+				abs(self.z(index)) >= self.SIDE_LENGTH)
+
+	def x(self, index):
+		return self.column_index(index) - self.CENTER_LINE_INDEX
+
+	def y(self, index):
+		return self.row_index(index) - self.CENTER_LINE_INDEX
+
+	def z(self, index):
+		return -self.x(index) - self.y(index)
+
+	def index_from_column_and_row_indices(self, column_index, row_index):
+		return column_index + (self.LINE_LENGTH * row_index)
+
+	def index_from_xy(self, x, y):
+		return self.index_from_column_and_row_indices(x + self.CENTER_LINE_INDEX, y + self.CENTER_LINE_INDEX)
+
+	def valid_line_index(self, index):
+		return 0 <= index < self.LINE_LENGTH
+
 class HexHexGameTemplate:
 	NONE = -1
 	EMPTY = 0
@@ -5,80 +63,47 @@ class HexHexGameTemplate:
 	WHITE = 2
 	DIRECTIONS = [(0,1), (1,0), (-1,0), (0,-1), (1,-1), (-1,1)]
 
-	# As it stands, all of this happens every time an instance of this class is made.
-	# It is not possible to overload methods in Python.
-	# One solution is to make it conditional on the arguments passed.
-	# Another is to make a separate initialization method that must be called manually
-	def __init__(self, side_length):
-		self.SIDE_LENGTH = side_length
-		self.LINE_LENGTH = 2 * side_length - 1
-		self.CENTER_LINE_INDEX = side_length - 1
+	# Sets the initial state and sets up the topology facts
+	# Must be called only once, and not from the copies
+	def init(self, side_length):
+		self.top = HexHexTopology(side_length)
 		# Array of cells. Each cell is a tuple (state=NONE|EMPTY|BLACK|WHITE, group_ID=NONE|nonnegative int)
 		self.board = [
-			(self.NONE, self.NONE) if self._is_off_board(index) else (self.EMPTY, self.NONE) 
-			for index in range(self.LINE_LENGTH * self.LINE_LENGTH)
+			(self.NONE, self.NONE) if self.top.is_off_board(index) else (self.EMPTY, self.NONE) 
+			for index in range(self.top.LINE_LENGTH * self.top.LINE_LENGTH)
 		]
-		# Adjacency list for valid indices only. Should never be deep copied.
-		self.adjacency_list = self._create_adjacency_list()
+		self.mover = self.BLACK
+
+	# Should return a deep copy of the state and a reference to the "immutable" topology object.
+	def copy(self):
+		other = self.__class__()
+
+		# copy reference only
+		other.top = self.top
+
+		# deep copy
+		other.mover = self.mover
+		other.board = [(state, group_ID) for (state, group_ID) in self.board]
+		return other
 
 	def count_moves(self, mover):
-		return len([i for i in self.adjacency_list.keys() if self.board[i][0] == self.EMPTY and 
-   															 self._even_neighbors(i, mover)])
+		return len([i for i in self.top.adjacency_list.keys() if self.board[i][0] == self.EMPTY and 
+   																 self._even_neighbors(i, mover)])
+	
+	def apply_nth_move(self, n):
+		return
 
-	def _create_adjacency_list(self):
-		result = {}
-		# Map valid indices to empty lists initially
-		for i, (state, _) in enumerate(self.board):
-			if state != self.NONE:
-				result[i] = []
+	def get_mover(self):
+		return self.mover
 
-		# Populate the lists with valid neighbors		
-		valid_indices = result.keys()
-		for i in valid_indices:
-			for dx, dy in self.DIRECTIONS:
-				new_column_i = self._column_index(i) + dx
-				new_row_i = self._row_index(i) + dy
-				new_i = self._index_from_column_and_row_indices(new_column_i, new_row_i)
-
-				if new_i in valid_indices:
-					result[i].append(new_i)
-		
-		return result
-
-	def _column_index(self, index):
-		return index % self.LINE_LENGTH
-
-	def _row_index(self, index):
-		return index // self.LINE_LENGTH
-
-	def _is_off_board(self, index):
-		return (abs(self._x(index)) >= self.SIDE_LENGTH or
-				abs(self._y(index)) >= self.SIDE_LENGTH or
-				abs(self._z(index)) >= self.SIDE_LENGTH)
-
-	def _x(self, index):
-		return self._column_index(index) - self.CENTER_LINE_INDEX
-
-	def _y(self, index):
-		return self._row_index(index) - self.CENTER_LINE_INDEX
-
-	def _z(self, index):
-		return -self._x(index) - self._y(index)
-
-	def _index_from_column_and_row_indices(self, column_index, row_index):
-		return column_index + (self.LINE_LENGTH * row_index)
-
-	def _index_from_xy(self, x, y):
-		return self._index_from_column_and_row_indices(x + self.CENTER_LINE_INDEX, y + self.CENTER_LINE_INDEX)
-
-	def _valid_line_index(self, index):
-		return 0 <= index < self.LINE_LENGTH
+	def get_nonmover(self):
+		return (self.BLACK + self.WHITE) - self.mover
 
 	def _even_neighbors(self, index, owner):
 		unique_group_ids = set()
 
 		# Iterate through each direction from the current position
-		for neighbor in self.adjacency_list[index]:
+		for neighbor in self.top.adjacency_list[index]:
 
 				# Check if the cell belongs to the specified owner
 				cell_state, group_id = self.board[neighbor]
@@ -87,21 +112,27 @@ class HexHexGameTemplate:
 
 		# Return True if the count of unique group IDs is even, False otherwise
 		return len(unique_group_ids) % 2 == 0
+	
+	# def print_all_moves(self):
+	## prints all legal moves for the active player in the current state
+
+	# def print_move_n(self, n):
+	## prints move number n
 
 	def __str__(self):
 		result = ""
 
 		for i, (state, _) in enumerate(self.board[::-1]):
 			# print row offset
-			if self._column_index(i) == 0:
-				result += "   " * self._row_index(i)
+			if self.top.column_index(i) == 0:
+				result += "   " * self.top.row_index(i)
 			# print cell state
 			if state == self.NONE:
 				result += "      "
 			else:
 				result += f"{state:02d}    "
 			# line break after last column
-			if self._column_index(i) == self.LINE_LENGTH - 1:
+			if self.top.column_index(i) == self.top.LINE_LENGTH - 1:
 				result += "\n\n"
 
 		return result
