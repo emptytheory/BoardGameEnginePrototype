@@ -120,24 +120,19 @@ class HexHexGameTemplate:
 	# def print_move_n(self, n):
 	## prints move number n
 
-	# Accidentally mirrors the board, so not correctly implemented
-	# Need to only flip across the horizontal axis, corrently flips across both
-	# That is, I need to reverse each column individually, not the entire array
 	def __str__(self):
 		result = ""
 
-		for i, (state, _) in enumerate(self.board[::-1]):
-			# print row offset
-			if self.top.column_index(i) == 0:
-				result += "   " * self.top.row_index(i)
-			# print cell state
-			if state == self.NONE:
-				result += "      "
-			else:
-				result += f"{state:02d}    "
-			# line break after last column
-			if self.top.column_index(i) == self.top.LINE_LENGTH - 1:
-				result += "\n\n"
+		for row_i in range(self.top.LINE_LENGTH-1, -1, -1):
+			result += "   " * row_i
+			for column_i in range(self.top.LINE_LENGTH):
+				i = self.top.index_from_column_and_row_indices(column_i, row_i)
+				state, _ = self.board[i]
+				if state == self.NONE:
+					result += "      "
+				else:
+					result += f"{state:02d}    "
+			result += "\n\n"
 
 		return result
 
