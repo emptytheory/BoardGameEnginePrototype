@@ -1,4 +1,6 @@
-class HexHexTopology:
+class HexHexTopology:	
+	DIRECTIONS = [(0,1), (1,0), (-1,0), (0,-1), (1,-1), (-1,1)]
+
 	def __init__(self, side_length):
 		self.SIDE_LENGTH = side_length
 		self.LINE_LENGTH = 2 * side_length - 1
@@ -61,7 +63,6 @@ class HexHexGameTemplate:
 	EMPTY = 0
 	BLACK = 1
 	WHITE = 2
-	DIRECTIONS = [(0,1), (1,0), (-1,0), (0,-1), (1,-1), (-1,1)]
 
 	# Sets the initial state and sets up the topology facts
 	# Must be called only once, and not from the copies
@@ -119,6 +120,9 @@ class HexHexGameTemplate:
 	# def print_move_n(self, n):
 	## prints move number n
 
+	# Accidentally mirrors the board, so not correctly implemented
+	# Need to only flip across the horizontal axis, corrently flips across both
+	# That is, I need to reverse each column individually, not the entire array
 	def __str__(self):
 		result = ""
 
