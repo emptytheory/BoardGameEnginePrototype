@@ -69,11 +69,13 @@ class HexHexGameTemplate:
 	def init(self, side_length):
 		self.top = HexHexTopology(side_length)
 		# Array of cells. Each cell is a tuple (state=NONE|EMPTY|BLACK|WHITE, group_ID=NONE|nonnegative int)
+		# It would probably be faster if these weren't immutable
 		self.board = [
 			(self.NONE, self.NONE) if self.top.is_off_board(index) else (self.EMPTY, self.NONE) 
 			for index in range(self.top.LINE_LENGTH * self.top.LINE_LENGTH)
 		]
 		self.mover = self.BLACK
+		self.next_group_ID = 1
 
 	# Should return a deep copy of the state and a reference to the "immutable" topology object.
 	def copy(self):
@@ -89,10 +91,14 @@ class HexHexGameTemplate:
 
 	def count_moves(self, mover):
 		return len([i for i in self.top.adjacency_list.keys() if self.board[i][0] == self.EMPTY and 
-   																 self._even_neighbors(i, mover)])
+   																 len(self._friendly_adjacent_group_IDs(i, mover)) % 2 == 0])
 	
 	def apply_nth_move(self, n):
-		return
+		# this is currently repeated in count moves and here, but should be optimized
+		chosen_move = [i for i in self.top.adjacency_list.keys() if self.board[i][0] == self.EMPTY and 
+   																 len(self._friendly_adjacent_group_IDs(i, self.get_mover())) % 2 == 0][n]
+		self._update_group_IDs(chosen_move)
+		self.mover = self.get_nonmover()
 
 	def get_mover(self):
 		return self.mover
@@ -100,7 +106,7 @@ class HexHexGameTemplate:
 	def get_nonmover(self):
 		return (self.BLACK + self.WHITE) - self.mover
 
-	def _even_neighbors(self, index, owner):
+	def _friendly_adjacent_group_IDs(self, index, owner):
 		unique_group_ids = set()
 
 		# Iterate through each direction from the current position
@@ -112,8 +118,28 @@ class HexHexGameTemplate:
 					unique_group_ids.add(group_id)
 
 		# Return True if the count of unique group IDs is even, False otherwise
-		return len(unique_group_ids) % 2 == 0
+		return unique_group_ids
 	
+
+	# should only be called afer a legal placement and therefore
+	# only when there are 0 or 2 friendly adjacent groups
+	def _update_group_IDs(self, last_to):
+		neighbor_set = self._friendly_adjacent_group_IDs(last_to, self.get_mover())
+
+		if len(neighbor_set) == 0:
+			self.board[last_to] = (self.get_mover(), self.next_group_ID)
+			self.next_group_ID += 1
+			return
+		
+		new_ID = min(neighbor_set)
+		old_ID = max(neighbor_set)
+		self.board[last_to] = (self.get_mover(), new_ID)
+		for i, (state, ID) in enumerate(self.board):
+			if ID == old_ID:
+				self.board[i] = state, new_ID
+		
+		
+
 	# def print_all_moves(self):
 	## prints all legal moves for the active player in the current state
 
@@ -146,6 +172,19 @@ Example of the array of a hexhex 4 board:
 --  15  16  17  18  19  20
 --  --  09  10  11  12  13
 --  --  --  03  04  05  06
+
+
+I messed up when cutting the other corners. It was originally like this:
+--  --  --  45  46  47  48
+--  --  37  38  39  40  41
+--  29  30  31  32  33  34
+21  22  23  24  25  26  27
+14  15  16  17  18  19  --
+07  08  09  10  11  --  --
+00  01  02  03  --  --  --
+Here, no consecutive indices wrap around the board.
+I think it can be fixed by associating x and y with the row and column indices, respectively, 
+rather than the other way around. Let's see..
 
 UCT interface:
 - how many moves are available?
