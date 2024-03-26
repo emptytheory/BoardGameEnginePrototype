@@ -20,9 +20,9 @@ class HexHexTopology:
 		valid_indices = result.keys()
 		for i in valid_indices:
 			for dx, dy in self.DIRECTIONS:
-				new_column_i = self.column_index(i) + dx
-				new_row_i = self.row_index(i) + dy
-				new_i = self.index_from_column_and_row_indices(new_column_i, new_row_i)
+				new_x = self.x(i) + dx
+				new_y = self.y(i) + dy
+				new_i = self.index_from_xy(new_x, new_y)
 
 				if new_i in valid_indices:
 					result[i].append(new_i)
@@ -44,7 +44,7 @@ class HexHexTopology:
 		return self.column_index(index) - self.CENTER_LINE_INDEX
 
 	def y(self, index):
-		return self.row_index(index) - self.CENTER_LINE_INDEX
+		return self.row_index(index) - self.column_index(index) # self.CENTER_LINE_INDEX
 
 	def z(self, index):
 		return -self.x(index) - self.y(index)
@@ -53,7 +53,7 @@ class HexHexTopology:
 		return column_index + (self.LINE_LENGTH * row_index)
 
 	def index_from_xy(self, x, y):
-		return self.index_from_column_and_row_indices(x + self.CENTER_LINE_INDEX, y + self.CENTER_LINE_INDEX)
+		return self.index_from_column_and_row_indices(x + self.CENTER_LINE_INDEX, y + x + self.CENTER_LINE_INDEX)
 
 	def valid_line_index(self, index):
 		return 0 <= index < self.LINE_LENGTH
@@ -182,6 +182,16 @@ I messed up when cutting the other corners. It was originally like this:
 14  15  16  17  18  19  --
 07  08  09  10  11  --  --
 00  01  02  03  --  --  --
+
+
+        0, 1, 2, 3, 
+      7, 8, 9, 10, 11, 
+   14, 15, 16, 17, 18, 19, 
+21, 22, 23, 24, 25, 26, 27, 
+   29, 30, 31, 32, 33, 34, 
+     37, 38, 39, 40, 41, 
+       45, 46, 47, 48
+
 Here, no consecutive indices wrap around the board.
 I think it can be fixed by associating x and y with the row and column indices, respectively, 
 rather than the other way around. Let's see..
