@@ -34,6 +34,11 @@ class HexHexTopology:
 
 	def _row_index(self, index):
 		return index // self.LINE_LENGTH
+	
+	def _create_coordinate_map(self, index_set):
+		result = {}
+
+		return result
 
 	def is_off_board(self, index):
 		return (abs(self.x(index)) >= self.SIDE_LENGTH or
@@ -54,6 +59,9 @@ class HexHexTopology:
 
 	def index_from_xy(self, x, y):
 		return self._index_from_column_and_row_indices(x + self.CENTER_LINE_INDEX, y + x + self.CENTER_LINE_INDEX)
+	
+	def coordinates(self, index):
+
 
 class HexHexGameTemplate:
 	NONE = -1
@@ -149,7 +157,8 @@ class HexHexGameTemplate:
 		for row_i in range(self.top.LINE_LENGTH-1, -1, -1):
 			result += "   " * row_i
 			for column_i in range(self.top.LINE_LENGTH):
-				i = self.top.index_from_column_and_row_indices(column_i, row_i)
+				# shouldn't need access to this private function?
+				i = self.top._index_from_column_and_row_indices(column_i, row_i)
 				state, _ = self.board[i]
 				if state == self.NONE:
 					result += "      "
@@ -162,16 +171,6 @@ class HexHexGameTemplate:
 
 """
 Example of the array of a hexhex 4 board:
-42  43  44  45  --  --  --
-35  36  37  38  39  --  --
-28  29  30  31  32  33  --
-21  22  23  24  25  26  27
---  15  16  17  18  19  20
---  --  09  10  11  12  13
---  --  --  03  04  05  06
-
-
-I messed up when cutting the other corners. It was originally like this:
 --  --  --  45  46  47  48
 --  --  37  38  39  40  41
 --  29  30  31  32  33  34
@@ -179,6 +178,52 @@ I messed up when cutting the other corners. It was originally like this:
 14  15  16  17  18  19  --
 07  08  09  10  11  --  --
 00  01  02  03  --  --  --
+
+
+
+
+
+Z:
+-3
+-2
+-1
+0
+1
+2
+3
+
+Y: 3
+      2
+	     1
+		    0
+			   -1
+			      -2
+				     -3
+
+X: -3 -2 -1 0   1  2  3
+
+--  --  --  45  46  47  48
+  --  --  37  38  39  40  41
+    --  29  30  31  32  33  34
+     21  22  23  24  25  26  27
+       14  15  16  17  18  19  --
+         07  08  09  10  11  --  --
+           00  01  02  03  --  --  --
+x /
+z or r: |
+y \
+			   
+x=q
+y=s
+z=r
+
++s   -r   +q
+ \    |    /
+-s   +r   -q
+
+Different representation:
++s -r +q
+-q +r -s
 
 
         0, 1, 2, 3, 
