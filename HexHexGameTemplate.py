@@ -29,10 +29,10 @@ class HexHexTopology:
 		
 		return result
 
-	def column_index(self, index):
+	def _column_index(self, index):
 		return index % self.LINE_LENGTH
 
-	def row_index(self, index):
+	def _row_index(self, index):
 		return index // self.LINE_LENGTH
 
 	def is_off_board(self, index):
@@ -41,22 +41,19 @@ class HexHexTopology:
 				abs(self.z(index)) >= self.SIDE_LENGTH)
 
 	def x(self, index):
-		return self.column_index(index) - self.CENTER_LINE_INDEX
+		return self._column_index(index) - self.CENTER_LINE_INDEX
 
 	def y(self, index):
-		return self.row_index(index) - self.column_index(index) # self.CENTER_LINE_INDEX
+		return self._row_index(index) - self._column_index(index)
 
 	def z(self, index):
 		return -self.x(index) - self.y(index)
 
-	def index_from_column_and_row_indices(self, column_index, row_index):
+	def _index_from_column_and_row_indices(self, column_index, row_index):
 		return column_index + (self.LINE_LENGTH * row_index)
 
 	def index_from_xy(self, x, y):
-		return self.index_from_column_and_row_indices(x + self.CENTER_LINE_INDEX, y + x + self.CENTER_LINE_INDEX)
-
-	def valid_line_index(self, index):
-		return 0 <= index < self.LINE_LENGTH
+		return self._index_from_column_and_row_indices(x + self.CENTER_LINE_INDEX, y + x + self.CENTER_LINE_INDEX)
 
 class HexHexGameTemplate:
 	NONE = -1
