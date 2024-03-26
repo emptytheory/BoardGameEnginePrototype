@@ -8,6 +8,7 @@ class HexHexTopology:
 
 		# Adjacency list for valid indices only
 		self.adjacency_list = self._create_adjacency_list()
+		self.coordinate_map = self._create_coordinate_map(self.adjacency_list.keys())
 
 	def _create_adjacency_list(self):
 		result = {}
@@ -36,8 +37,12 @@ class HexHexTopology:
 		return index // self.LINE_LENGTH
 	
 	def _create_coordinate_map(self, index_set):
+		alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 		result = {}
-
+		for i in index_set:
+			letter_i = self._column_index(i) % len(alphabet)
+			number = self._row_index(i) + 1
+			result[i] = f"{alphabet[letter_i]}{number}"
 		return result
 
 	def is_off_board(self, index):
@@ -60,8 +65,6 @@ class HexHexTopology:
 	def index_from_xy(self, x, y):
 		return self._index_from_column_and_row_indices(x + self.CENTER_LINE_INDEX, y + x + self.CENTER_LINE_INDEX)
 	
-	def coordinates(self, index):
-
 
 class HexHexGameTemplate:
 	NONE = -1
