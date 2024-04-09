@@ -30,18 +30,18 @@ class HexHexTopology:
 		
 		return result
 
-	def _column_index(self, index):
+	def column_index(self, index):
 		return index % self.LINE_LENGTH
 
-	def _row_index(self, index):
+	def row_index(self, index):
 		return index // self.LINE_LENGTH
 	
 	def _create_coordinate_map(self, index_set):
 		alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 		result = {}
 		for i in index_set:
-			letter_i = self._column_index(i) % len(alphabet)
-			number = self._row_index(i) + 1
+			letter_i = self.column_index(i) % len(alphabet)
+			number = self.row_index(i) + 1
 			result[i] = f"{alphabet[letter_i]}{number}"
 		return result
 
@@ -51,19 +51,19 @@ class HexHexTopology:
 				abs(self.z(index)) >= self.SIDE_LENGTH)
 
 	def x(self, index):
-		return self._column_index(index) - self.CENTER_LINE_INDEX
+		return self.column_index(index) - self.CENTER_LINE_INDEX
 
 	def y(self, index):
-		return self._row_index(index) - self._column_index(index)
+		return self.row_index(index) - self.column_index(index)
 
 	def z(self, index):
 		return -self.x(index) - self.y(index)
 
-	def _index_from_column_and_row_indices(self, column_index, row_index):
+	def index_from_column_and_row_indices(self, column_index, row_index):
 		return column_index + (self.LINE_LENGTH * row_index)
 
 	def index_from_xy(self, x, y):
-		return self._index_from_column_and_row_indices(x + self.CENTER_LINE_INDEX, y + x + self.CENTER_LINE_INDEX)
+		return self.index_from_column_and_row_indices(x + self.CENTER_LINE_INDEX, y + x + self.CENTER_LINE_INDEX)
 	
 
 class HexHexGameTemplate:
@@ -128,7 +128,6 @@ class HexHexGameTemplate:
 		# Return True if the count of unique group IDs is even, False otherwise
 		return unique_group_ids
 	
-
 	# should only be called afer a legal placement and therefore
 	# only when there are 0 or 2 friendly adjacent groups
 	def _update_group_IDs(self, last_to):
@@ -145,23 +144,27 @@ class HexHexGameTemplate:
 		for i, (state, ID) in enumerate(self.board):
 			if ID == old_ID:
 				self.board[i] = state, new_ID
-		
-		
 
-	# def print_all_moves(self):
-	## prints all legal moves for the active player in the current state
+	def print_all_moves(self):
+		moves = [self.top.coordinate_map[i] for i in self.top.adjacency_list.keys() 
+		   		    if self.board[i][0] == self.EMPTY and 
+				    len(self._friendly_adjacent_group_IDs(i, self.get_mover)) % 2 == 0]
+		for i, move in enumerate(moves):
+			print(f"{i}: {move}")
 
-	# def print_move_n(self, n):
-	## prints move number n
+	def print_move_n(self, n):
+		moves = [i for i in self.top.adjacency_list.keys() 
+		   		    if self.board[i][0] == self.EMPTY and 
+				    len(self._friendly_adjacent_group_IDs(i, self.get_mover)) % 2 == 0]
+		print(f"{n}: {self.top.coordinate_map[moves[n]]}")
 
 	def __str__(self):
 		result = ""
 
 		for row_i in range(self.top.LINE_LENGTH-1, -1, -1):
-			result += "   " * row_i
+			result += "   " * ((self.top.LINE_LENGTH - 1) - row_i)
 			for column_i in range(self.top.LINE_LENGTH):
-				# shouldn't need access to this private function?
-				i = self.top._index_from_column_and_row_indices(column_i, row_i)
+				i = self.top.index_from_column_and_row_indices(column_i, row_i)
 				state, _ = self.board[i]
 				if state == self.NONE:
 					result += "      "
